@@ -101,7 +101,7 @@ void IEKF::correctDistance(const distance_sensor_s *msg)
 	//}
 
 	// expected measurement
-	float agl = _x(X::asl) - _x(X::terrain_asl);
+	float agl = getAgl();
 	float yh = agl / C_nb(2, 2);
 
 	// measured distance
@@ -143,14 +143,14 @@ void IEKF::correctDistance(const distance_sensor_s *msg)
 	}
 
 	if (sensor->shouldCorrect()) {
-		ROS_INFO("correct dist bottom");
+		//ROS_INFO("correct dist bottom");
 		// don't allow attitude correction
-		_dxe(Xe::rot_N) = 0;
-		_dxe(Xe::rot_E) = 0;
-		_dxe(Xe::rot_D) = 0;
-		_dxe(Xe::gyro_bias_N) = 0;
-		_dxe(Xe::gyro_bias_E) = 0;
-		_dxe(Xe::gyro_bias_D) = 0;
+		nullAttitudeCorrection(_dxe);
+		// don't allow position correction in north/ east
+		_dxe(Xe::pos_N) = 0;
+		_dxe(Xe::pos_E) = 0;
+		_dxe(Xe::vel_N) = 0;
+		_dxe(Xe::vel_E) = 0;
 		Vector<float, X::n> dx = computeErrorCorrection(_dxe);
 		incrementX(dx);
 		incrementP(_dP);

@@ -161,7 +161,8 @@ public:
 		//dP -= P;
 		dx = K * r;
 	}
-	float & getRateMax() {
+	float &getRateMax()
+	{
 		return _rateMax;
 	}
 

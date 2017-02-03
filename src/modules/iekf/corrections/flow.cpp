@@ -80,8 +80,8 @@ void IEKF::correctFlow(const optical_flow_s *msg)
 	float vel_N = _x(X::vel_N);
 	float vel_E = _x(X::vel_E);
 	float vel_D = _x(X::vel_D);
-	float omega_bx = angVelNB(0);
-	float omega_by = angVelNB(1);
+	float omega_bx = 0; //angVelNB(0);
+	float omega_by = 0; //angVelNB(1);
 	float rotRate = angVelNB.norm();
 
 	// abort if rotRate too high
@@ -115,8 +115,8 @@ void IEKF::correctFlow(const optical_flow_s *msg)
 	y(0) = -msg->pixel_flow_y_integral / flow_dt;
 	y(1) = msg->pixel_flow_x_integral / flow_dt;
 
-	ROS_INFO("flow X %10.4f Y %10.4f", double(y(0)), double(y(1)));
-	ROS_INFO("vel N %10.4f E %10.4f", double(vel_N), double(vel_E));
+	//ROS_INFO("flow vel X %10.4f vel Y %10.4f", double(agl*y(0)), double(agl*y(1)));
+	//ROS_INFO("vel N %10.4f E %10.4f", double(vel_N), double(vel_E));
 
 	// residual
 	Vector<float, Y_flow::n> r = y - yh;
@@ -202,12 +202,7 @@ void IEKF::correctFlow(const optical_flow_s *msg)
 	if (_sensorFlow.shouldCorrect()) {
 		ROS_INFO("correct flow");
 		// don't allow attitude correction
-		_dxe(Xe::rot_N) = 0;
-		_dxe(Xe::rot_E) = 0;
-		_dxe(Xe::rot_D) = 0;
-		_dxe(Xe::gyro_bias_N) = 0;
-		_dxe(Xe::gyro_bias_E) = 0;
-		_dxe(Xe::gyro_bias_D) = 0;
+		nullAttitudeCorrection(_dxe);
 		Vector<float, X::n> dx = computeErrorCorrection(_dxe);
 		incrementX(dx);
 		incrementP(_dP);

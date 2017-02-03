@@ -31,7 +31,7 @@
  *
  ****************************************************************************/
 
-#include "controllib/blocks.hpp"
+//#include "controllib/blocks.hpp"
 #include "ros/ros.hpp"
 #include "matrix/math.hpp"
 #include <lib/geo/geo.h>
@@ -65,7 +65,7 @@
 #include <uORB/topics/estimator_innov_std.h>
 
 using namespace matrix;
-using namespace control;
+//using namespace control;
 
 /**
  * Main class for invariant extended kalman filter
@@ -74,7 +74,7 @@ using namespace control;
  *
  * See: https://github.com/jgoppert/iekf_analysisa for derivation/ simulation
  */
-class IEKF : public SuperBlock
+class IEKF /* : public SuperBlock */
 {
 public:
 	IEKF();
@@ -214,19 +214,41 @@ public:
 	{
 		return getGyroRawFrameB() - getGyroBiasFrameB();
 	}
+	inline Vector3f getGroundVelocity() const
+	{
+		return Vector3f(_x(X::vel_N), _x(X::vel_E), _x(X::vel_D));
+	}
 	inline Vector3f getAccelerationFrameB() const
 	{
 		Vector3f a_b(_u(U::accel_bX), _u(U::accel_bY), _u(U::accel_bZ));
 		Vector3f a_bias_b(_x(X::accel_bias_bX), _x(X::accel_bias_bY), _x(X::accel_bias_bZ));
 		return a_b - a_bias_b;
 	}
+	inline void nullPositionCorrection(Vector<float, Xe::n> &dxe)
+	{
+		dxe(Xe::vel_N) = 0;
+		dxe(Xe::vel_E) = 0;
+		dxe(Xe::vel_D) = 0;
+		dxe(Xe::pos_N) = 0;
+		dxe(Xe::pos_E) = 0;
+		dxe(Xe::asl) = 0;
+		dxe(Xe::terrain_asl) = 0;
+		dxe(Xe::accel_bias_N) = 0;
+		dxe(Xe::accel_bias_E) = 0;
+		dxe(Xe::accel_bias_D) = 0;
+	}
+	inline void nullAttitudeCorrection(Vector<float, Xe::n> &dxe)
+	{
+		dxe(Xe::rot_N) = 0;
+		dxe(Xe::rot_E) = 0;
+		dxe(Xe::rot_D) = 0;
+		dxe(Xe::gyro_bias_N) = 0;
+		dxe(Xe::gyro_bias_E) = 0;
+		dxe(Xe::gyro_bias_D) = 0;
+	}
+
 private:
 	ros::NodeHandle _nh;
-
-	// blocks
-	//BlockLowPass _baroLP;
-	//BlockLowPassVector<float, 3> _accelLP;
-	//BlockLowPassVector<float, 3> _magLP;
 
 	// sensors
 	Sensor _sensorAccel;

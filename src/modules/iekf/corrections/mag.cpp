@@ -80,7 +80,9 @@ void IEKF::correctMag(const sensor_combined_s *msg)
 		// don't allow correction of roll/ pitch
 		_dxe(Xe::rot_N) = 0;
 		_dxe(Xe::rot_E) = 0;
+		nullPositionCorrection(_dxe);
 		Vector<float, X::n> dx = computeErrorCorrection(_dxe);
+
 		incrementX(dx);
 		incrementP(_dP);
 	}

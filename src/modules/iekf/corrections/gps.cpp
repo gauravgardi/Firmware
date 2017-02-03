@@ -147,12 +147,7 @@ void IEKF::correctGps(const vehicle_gps_position_s *msg)
 
 	if (_sensorGps.shouldCorrect()) {
 		// don't allow attitude correction
-		_dxe(Xe::rot_N) = 0;
-		_dxe(Xe::rot_E) = 0;
-		_dxe(Xe::rot_D) = 0;
-		_dxe(Xe::gyro_bias_N) = 0;
-		_dxe(Xe::gyro_bias_E) = 0;
-		_dxe(Xe::gyro_bias_D) = 0;
+		nullAttitudeCorrection(_dxe);
 		Vector<float, X::n> dx = computeErrorCorrection(_dxe);
 		incrementX(dx);
 		incrementP(_dP);

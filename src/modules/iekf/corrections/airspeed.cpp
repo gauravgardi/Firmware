@@ -115,6 +115,7 @@ void IEKF::correctAirspeed(const airspeed_s *msg)
 	_innovStd(Innov::PITOT_airspeed) = sqrtf(S(0, 0));
 
 	if (_sensorAirspeed.shouldCorrect()) {
+		nullAttitudeCorrection(_dxe);
 		Vector<float, X::n> dx = computeErrorCorrection(_dxe);
 		incrementX(dx);
 		incrementP(_P);

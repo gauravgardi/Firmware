@@ -38,9 +38,10 @@ float condMaxDefault = 1e3;
 float betaMaxDefault = 1e21;
 
 IEKF::IEKF() :
-	SuperBlock(NULL, "IEKF"),
-	_nh(), // node handlke
+	//SuperBlock(NULL, "IEKF"),
+	_nh(), // node handle
 	// blocks
+	//_aglLP(this, "POS_LP"),
 	//_baroLP(this, "BARO_LP"),
 	//_accelLP(this, "ACCEL_LP"),
 	//_magLP(this, "MAG_LP"),
@@ -132,6 +133,7 @@ IEKF::IEKF() :
 	_pn_vz_nd(0),
 	_pn_rot_nd(0),
 	_pn_t_asl_nd(0)
+
 {
 	// for quaterinons we bound at 2
 	// so it has a chance to
@@ -153,7 +155,7 @@ IEKF::IEKF() :
 	_xMin(X::pos_E) = -1e30;
 	_xMin(X::asl) = -1e30;
 	_xMin(X::terrain_asl) = -1e30;
-	_xMin(X::baro_bias) = -1e30;
+	_xMin(X::baro_bias) = -100;
 	//_xMin(X::wind_N) = -100;
 	//_xMin(X::wind_E) = -100;
 	//_xMin(X::wind_D) = -100;
@@ -175,7 +177,7 @@ IEKF::IEKF() :
 	_xMax(X::pos_E) = 1e30;
 	_xMax(X::asl) = 1e30;
 	_xMax(X::terrain_asl) = 1e30;
-	_xMax(X::baro_bias) = 1e30;
+	_xMax(X::baro_bias) = 100;
 	//_xMax(X::wind_N) = 100;
 	//_xMax(X::wind_E) = 100;
 	//_xMax(X::wind_D) = 100;
@@ -319,10 +321,6 @@ void IEKF::callbackImu(const sensor_combined_s *msg)
 	_u(U::accel_bY) = accel_b(1);
 	_u(U::accel_bZ) = accel_b(2);
 
-	//_accelLP.update(accel_b);
-	//_magLP.update(mag_b);
-	//_baroLP.update(msg->baro_alt_meter);
-
 	// update gyro saturation
 	if (gyro_b.norm() > gyro_saturation_thresh) {
 		_gyroSaturated = true;
@@ -347,26 +345,20 @@ void IEKF::callbackImu(const sensor_combined_s *msg)
 
 		predictState(msg);
 
-		// set correciton deadline to 250 hz
-
-		// max update rate of innert loops, 10 hz
-		int lowRateCount = 25;
-
-		// check if sensors are ready using row late cycle
-		if (_imuLowRateIndex % lowRateCount == 0) {
+		if (_imuLowRateIndex % 25 == 0) {
+			// 10 hz scheduling
 			predictCovariance(msg);
 
-		} else if (_imuLowRateIndex % lowRateCount == 1) {
-			correctAccel(msg);
+		} else {
+			// ~100 hz scheduling
+			if (_imuLowRateIndex % 2 == 0) {
+				correctLand(msg->timestamp);
+				correctAccel(msg);
 
-		} else if (_imuLowRateIndex % lowRateCount == 2) {
-			correctMag(msg);
-
-		} else if (_imuLowRateIndex % lowRateCount == 3) {
-			correctBaro(msg);
-
-		} else if (_imuLowRateIndex % lowRateCount == 4) {
-			correctLand(msg->timestamp);
+			} else {
+				correctMag(msg);
+				correctBaro(msg);
+			}
 		}
 
 		float overrunMillis = int32_t(ros::Time::now().toNSec() - deadline) / 1.0e6f;
@@ -386,7 +378,7 @@ void IEKF::callbackImu(const sensor_combined_s *msg)
 void IEKF::updateParams()
 {
 	// update all block params
-	SuperBlock::updateParams();
+	//SuperBlock::updateParams();
 
 	// update ros params
 	_nh.getParam("IEKF_GYRO_ND", _gyro_nd);
@@ -649,7 +641,8 @@ void IEKF::predictCovariance(const sensor_combined_s *msg)
 				   _pn_vxy_nd * _pn_vxy_nd;
 		float vel_var_z = _accel_nd * _accel_nd + \
 				  _pn_vz_nd * _pn_vz_nd;
-		float terrain_var_asl = _pn_t_asl_nd * _pn_t_asl_nd;
+		float groundSpeedSq = getGroundVelocity().dot(getGroundVelocity());
+		float terrain_var_asl = _pn_t_asl_nd * _pn_t_asl_nd * groundSpeedSq;
 
 		// account for gyro saturation
 		if (getGyroSaturated()) {
