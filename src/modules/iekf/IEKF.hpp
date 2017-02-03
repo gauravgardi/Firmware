@@ -136,7 +136,7 @@ public:
 	}
 	inline bool getLanded() const
 	{
-		return _landed;
+		return _landed && (getAgl() < 0.3f);
 	}
 	inline bool getAttitudeValid() const
 	{

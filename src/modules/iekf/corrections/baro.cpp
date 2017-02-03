@@ -81,7 +81,7 @@ void IEKF::correctBaro(const sensor_combined_s *msg)
 	SquareMatrix<float, Y_baro::n> R;
 	float dt_baro_sample = 0.01;
 	R(Y_baro::asl, Y_baro::asl) = _baro_nd * _baro_nd / dt_baro_sample;
-	ROS_INFO("baro dt: %10.4f, variance: %10.4f", double(dt), double(sqrtf(R(0, 0))));
+	//ROS_INFO("baro dt: %10.4f, variance: %10.4f", double(dt), double(sqrtf(R(0, 0))));
 
 	// define H
 	Matrix<float, Y_baro::n, Xe::n> H;

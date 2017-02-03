@@ -763,29 +763,36 @@ void IEKF::correctionLogic(Vector<float, X::n> &dx) const
 {
 
 	if (getLanded()) {
+		//ROS_INFO("not updating position, landed, agl: %10.4f, landed: %d",
+		//	double(getAgl()), _landed);
 		dx(X::pos_N) = 0;
 		dx(X::pos_E) = 0;
 	}
 
 	if (!getPositionXYValid()) {
+		//ROS_INFO("not updating position, xy not valid");
 		dx(X::pos_N) = 0;
 		dx(X::pos_E) = 0;
 	}
 
 	if (!getAltitudeValid()) {
+		//ROS_INFO("not updating position, altitude not valid");
 		dx(X::asl) = 0;
 	}
 
 	if (!getVelocityXYValid()) {
+		//ROS_INFO("not updating velocity xy, not valid");
 		dx(X::vel_N) = 0;
 		dx(X::vel_E) = 0;
 	}
 
 	if (!getVelocityZValid()) {
+		//ROS_INFO("not updating velocity z, not valid");
 		dx(X::vel_D) = 0;
 	}
 
 	if (!getTerrainValid()) {
+		//ROS_INFO("not updating terrain asl, not valid");
 		dx(X::terrain_asl) = 0;
 	}
 
@@ -799,6 +806,7 @@ void IEKF::correctionLogic(Vector<float, X::n> &dx) const
 				     _u(U::accel_bZ)).norm() > 1.2f * g;
 
 	if (rotating || accelerating) {
+		//ROS_INFO("not updating bias, rotating or accelerating");
 		dx(X::gyro_bias_bX) = 0;
 		dx(X::gyro_bias_bY) = 0;
 		dx(X::gyro_bias_bZ) = 0;
