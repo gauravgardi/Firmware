@@ -80,8 +80,8 @@ void IEKF::correctFlow(const optical_flow_s *msg)
 	float vel_N = _x(X::vel_N);
 	float vel_E = _x(X::vel_E);
 	float vel_D = _x(X::vel_D);
-	float omega_bx = 0; //angVelNB(0);
-	float omega_by = 0; //angVelNB(1);
+	float omega_bx = angVelNB(0);
+	float omega_by = angVelNB(1);
 	float rotRate = angVelNB.norm();
 
 	// abort if rotRate too high
